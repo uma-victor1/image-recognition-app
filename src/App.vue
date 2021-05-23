@@ -8,23 +8,26 @@
        <div v-else class="flex justify-between">
               <button
                 @click="stopStreaming"
-                class="w-32 rounded shadow-md bg-gradient-to-r from-blue-800 to-indigo-800 text-white px-2 py-1"
               >
                 Stop Streaming
               </button>
               <button
                 @click="snapshot"
-                class="w-32 rounded shadow-md bg-gradient-to-r from-blue-800 to-indigo-800 text-white px-2 py-1"
               >
                 Snapshot
               </button>
-            </div>
+       </div>
       <video ref="videoRef" autoplay="true" width="100" id="video"/>
       <div class="bg-gray-300 h-64 w-64 rounded-lg shadow-md bg-cover bg-center">
         <img class="w-64" ref="imgRef" src="https://images.unsplash.com/photo-1503792501406-2c40da09e1e2?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=752&q=80"
          alt="sciscors" crossorigin="anonymous">
       </div>
-      <button @click="detect" class="focus:outline-none text-white text-sm py-2.5 px-5 rounded-md bg-gray-700 hover:bg-gray-900 hover:shadow-lg">Detect</button>
+        <button
+              @click="detect"
+            >
+              <span v-if="isLoading">Loading ... </span>
+              <span v-else>Detect Object</span>
+        </button>
       <div v-if="result.length > 0">
               <p>{{ result[0].class }}</p>
           </div>
@@ -44,7 +47,7 @@ export default defineComponent({
   name: 'App',
   setup(){
     const imgRef = ref(img);
-
+    const isLoading = ref(false);
     const videoRef = ref<HTMLVideoElement>(video);
     const isStreaming = ref(false);
     const result = ref([]);
@@ -54,12 +57,14 @@ export default defineComponent({
       const model = await cocoSsd.load();
       const predictions = await model.detect(img);
       result.value = predictions;
+      isLoading.value = false;
       console.log(predictions, img);
     }  
     async function openCamera() {
       if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({video: true}).then((stream)=>{
            isStreaming.value = true;
+           
           videoRef.value.srcObject = stream;
         })
       }
